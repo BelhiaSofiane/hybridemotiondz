@@ -1601,3 +1601,48 @@ table.ac-table tbody tr:hover {
     display: none !important;
   }
 }
+
+/* ─── AnalyseClients: PDF export (html2canvas capture) ─────────────────────── */
+.ac-btn-pdf {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.ac-btn-pdf:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.ac-btn-pdf:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ac-pdf-busy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  pointer-events: all;
+}
+
+.ac-pdf-busy-inner {
+  background: #fff;
+  color: #0f172a;
+  padding: 16px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}

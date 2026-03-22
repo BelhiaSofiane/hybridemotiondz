@@ -206,6 +206,8 @@ export default function AnalyseClients() {
   const [filterShip, setFilterShip] = useState("Tous");
   const [filterSent, setFilterSent] = useState("Tous");
   const [showTable, setShowTable] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const pdfBusyRef = useRef(false);
   const [inputText, setInputText] = useState(
     "Fal tafhem! Ce produit c'est une dinguerie, j'ador\n" +
     "Mais houma 3anda probléme f livraison, hadak\n" +
@@ -271,6 +273,22 @@ export default function AnalyseClients() {
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 5);
 
+  const handleDownloadPdf = useCallback(async () => {
+    if (!analyzed || !data.length || pdfBusyRef.current) return;
+    pdfBusyRef.current = true;
+    setPdfBusy(true);
+    try {
+      const { downloadClientsAnalysisPdf } = await import("../utils/clientsReportPdf.js");
+      downloadClientsAnalysisPdf({ fileName, data, analytics });
+    } catch (e) {
+      console.error(e);
+      alert(e?.message ?? "Impossible de générer le PDF.");
+    } finally {
+      pdfBusyRef.current = false;
+      setPdfBusy(false);
+    }
+  }, [analyzed, data, fileName, analytics]);
+
   const shipPillStyle = (type) =>
     type === "Express" ? { bg: "#fff4ee", color: "#f97316" } :
     type === "Freight" ? { bg: "#f5f3ff", color: "#8b5cf6" } :
@@ -278,6 +296,11 @@ export default function AnalyseClients() {
 
   return (
     <div className="ac-root">
+      {pdfBusy && (
+        <div className="ac-pdf-busy-overlay" role="status" aria-live="polite">
+          <span className="ac-pdf-busy-inner">Génération du PDF…</span>
+        </div>
+      )}
 
       <main className="ac-body">
 
@@ -310,6 +333,19 @@ export default function AnalyseClients() {
                 }}
               >
                 🔄 Démo
+              </button>
+              <button
+                type="button"
+                className="ac-btn-pdf"
+                disabled={loading || pdfBusy || !analyzed || !data.length}
+                title={
+                  !analyzed || !data.length
+                    ? "Lancez d’abord une analyse"
+                    : "Télécharger le rapport (graphiques + tableau)"
+                }
+                onClick={() => void handleDownloadPdf()}
+              >
+                {pdfBusy ? "PDF…" : "📄 Télécharger PDF"}
               </button>
             </div>
           </div>
