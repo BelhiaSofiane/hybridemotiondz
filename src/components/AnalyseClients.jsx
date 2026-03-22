@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback } from "react";
+import { analyzeClientsDataset } from "../services/clientsAnalyze";
+import {
+  computeDashboardAnalytics,
+  emptyDashboardAnalytics,
+} from "../utils/clientDashboardAnalytics";
 
-// ─── Static dataset ───────────────────────────────────────────────────────────
+// ─── Static dataset (démo → envoi à l’API OpenAI) ────────────────────────────
 const STATIC_DATA = [
   { id: 1,  full_name: "Amine Benali",          city: "Algiers",    shipment_type: "Express",  last_order_date: "2026-02-12", comment: "service chaba bezaf w waslat b sr3a" },
   { id: 2,  full_name: "Sarah Mekki",            city: "Oran",       shipment_type: "Standard", last_order_date: "2026-01-28", comment: "taakhrat chwiya bsah waslat salma" },
@@ -54,86 +59,52 @@ const STATIC_DATA = [
   { id: 50, full_name: "Ali Hamani",             city: "Tlemcen",    shipment_type: "Express",  last_order_date: "2026-03-06", comment: "raani mradhi bsah ghali bzf" },
 ];
 
-// ─── Sentiment classifier ─────────────────────────────────────────────────────
-const POS_TOKENS = [
-  "mli7","sr3a","chaba","3jbatni","parfait","top","rapide","hayel","رائع",
-  "radit","thiqt","ni9a","khadma kamla","mradhi","3ajbni","amane","ndifa",
-  "niveau","kbira","mrbbi","ihtiram","احتراف","salma","wsalt","bezaf","tjriba",
-];
-const NEG_TOKENS = [
-  "khra","zbel","ma n3awedch","taakhr bzf","btiii","ma yrdouch","taakhr b zouj",
-];
-
-function classifySentiment(comment) {
-  const low = comment.toLowerCase();
-  const neg = NEG_TOKENS.filter(t => low.includes(t)).length;
-  const pos = POS_TOKENS.filter(t => low.includes(t)).length;
-  if (neg > 0 && pos === 0) return "negative";
-  if (neg > 0 && pos > 0)  return "mixed";
-  if (pos > 0)              return "positive";
-  return "neutral";
+// ─── CSV parser (guillemets et virgules dans les champs) ─────────────────────
+function parseCSVLine(line) {
+  const out = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (c === "," && !inQuotes) {
+      out.push(cur.trim());
+      cur = "";
+      continue;
+    }
+    cur += c;
+  }
+  out.push(cur.trim());
+  return out;
 }
 
-function computeAnalytics(data) {
-  const sentimentMap = {};
-  data.forEach(r => { sentimentMap[r.id] = classifySentiment(r.comment); });
-
-  const total   = data.length;
-  const pos     = data.filter(r => sentimentMap[r.id] === "positive").length;
-  const neg     = data.filter(r => sentimentMap[r.id] === "negative").length;
-  const mixed   = data.filter(r => sentimentMap[r.id] === "mixed").length;
-  const neutral = total - pos - neg - mixed;
-
-  const cityMap = {};
-  data.forEach(r => {
-    if (!cityMap[r.city]) cityMap[r.city] = { pos: 0, neg: 0, neutral: 0, total: 0 };
-    cityMap[r.city].total++;
-    const s = sentimentMap[r.id];
-    if (s === "positive")      cityMap[r.city].pos++;
-    else if (s === "negative") cityMap[r.city].neg++;
-    else                       cityMap[r.city].neutral++;
-  });
-
-  const shipMap = {};
-  data.forEach(r => {
-    if (!shipMap[r.shipment_type]) shipMap[r.shipment_type] = { pos: 0, neg: 0, neutral: 0, total: 0 };
-    shipMap[r.shipment_type].total++;
-    const s = sentimentMap[r.id];
-    if (s === "positive")      shipMap[r.shipment_type].pos++;
-    else if (s === "negative") shipMap[r.shipment_type].neg++;
-    else                       shipMap[r.shipment_type].neutral++;
-  });
-
-  const frTokens = ["service","livraison","tracking","packaging","parfait","organisation","niveau","rapide","produit","chargement"];
-  const arTokens = ["سريع","رائع","احتراف","بزاف"];
-  let frCount = 0, arCount = 0, darCount = 0;
-  data.forEach(r => {
-    const low = r.comment.toLowerCase();
-    frTokens.forEach(t => { if (low.includes(t)) frCount++; });
-    arTokens.forEach(t => { if (r.comment.includes(t)) arCount++; });
-    darCount += (low.match(/\b(mli7|sr3a|bezaf|3adi|3ajbni|wsalt|khadma|bsah|chwiya|mlih|taakhr|raani|bzf|walo)\b/g) || []).length;
-  });
-  const langTotal     = frCount + arCount + darCount;
-  const ihl           = langTotal > 0 ? Math.round(((frCount + arCount) / langTotal) * 100) : 52;
-  const delayMentions = data.filter(r => r.comment.toLowerCase().includes("taakhr")).length;
-
-  return {
-    total, pos, neg, mixed, neutral, sentimentMap, cityMap, shipMap, ihl, delayMentions,
-    posRatio:     Math.round((pos / total) * 100),
-    negRatio:     Math.round((neg / total) * 100),
-    neutralRatio: Math.round(((neutral + mixed) / total) * 100),
-  };
-}
-
-// ─── CSV parser ───────────────────────────────────────────────────────────────
 function parseCSV(text) {
-  const lines   = text.trim().split("\n");
-  const headers = lines[0].split(",").map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const vals = line.split(",");
-    const obj  = {};
-    headers.forEach((h, i) => { obj[h] = (vals[i] || "").trim(); });
-    return { ...obj, id: Number(obj.id) || Math.random() };
+  const lines = text
+    .trim()
+    .split(/\r?\n/)
+    .filter((l) => l.trim().length);
+  if (lines.length < 2) throw new Error("CSV invalide : besoin d’en-tête + données");
+  const headers = parseCSVLine(lines[0]).map((h) => h.trim().toLowerCase());
+  return lines.slice(1).map((line, idx) => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = (vals[i] ?? "").trim();
+    });
+    const idRaw = obj.id ?? obj["#"];
+    const idNum = Number(idRaw);
+    const id = Number.isFinite(idNum) && idNum > 0 ? idNum : idx + 1;
+    return {
+      id,
+      full_name: obj.full_name ?? obj.nom ?? "",
+      city: obj.city ?? obj.ville ?? "",
+      shipment_type: obj.shipment_type ?? obj.type ?? "",
+      last_order_date: obj.last_order_date ?? obj.date ?? "",
+      comment: obj.comment ?? obj.commentaire ?? "",
+    };
   });
 }
 
@@ -223,21 +194,44 @@ function SectionTitle({ children, action }) {
 
 // ─── Main export ─────────────────────────────────────────────────────────────
 export default function AnalyseClients() {
-  const [data,       setData]       = useState(STATIC_DATA);
-  const [analytics,  setAnalytics]  = useState(() => computeAnalytics(STATIC_DATA));
+  const [data, setData] = useState([]);
+  const [analytics, setAnalytics] = useState(() => emptyDashboardAnalytics());
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName,   setFileName]   = useState("données_clients_demo.csv");
+  const [fileName, setFileName] = useState("—");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [analyzed, setAnalyzed] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCity, setFilterCity] = useState("Toutes");
   const [filterShip, setFilterShip] = useState("Tous");
   const [filterSent, setFilterSent] = useState("Tous");
-  const [showTable,  setShowTable]  = useState(false);
-  const [inputText,  setInputText]  = useState(
+  const [showTable, setShowTable] = useState(false);
+  const [inputText, setInputText] = useState(
     "Fal tafhem! Ce produit c'est une dinguerie, j'ador\n" +
     "Mais houma 3anda probléme f livraison, hadak\n" +
     "li ychouf, mazalna n9esin f délais, ça dégoûte 😒"
   );
   const fileRef = useRef();
+
+  const runAnalysis = useCallback(async (rows) => {
+    if (!rows?.length) {
+      setError("Aucune ligne à analyser. Importez un CSV ou lancez la démo.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const api = await analyzeClientsDataset(rows);
+      setAnalytics(computeDashboardAnalytics(rows, api));
+      setAnalyzed(true);
+    } catch (e) {
+      console.error(e);
+      setError(e.message ?? "Erreur lors de l’analyse OpenAI");
+      setAnalyzed(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleFile = useCallback((file) => {
     if (!file) return;
@@ -247,18 +241,22 @@ export default function AnalyseClients() {
       try {
         const parsed = parseCSV(e.target.result);
         setData(parsed);
-        setAnalytics(computeAnalytics(parsed));
-      } catch { alert("Erreur de lecture CSV"); }
+        setAnalyzed(false);
+        setAnalytics(emptyDashboardAnalytics());
+        void runAnalysis(parsed);
+      } catch (err) {
+        alert(err.message ?? "Erreur de lecture CSV");
+      }
     };
     reader.readAsText(file);
-  }, []);
+  }, [runAnalysis]);
 
   const cities = ["Toutes", ...Array.from(new Set(data.map(r => r.city))).sort()];
   const ships  = ["Tous", "Express", "Standard", "Freight"];
   const sents  = ["Tous", "positive", "neutral", "negative", "mixed"];
 
-  const filteredData = data.filter(r => {
-    const s = analytics.sentimentMap[r.id];
+  const filteredData = data.filter((r) => {
+    const s = analytics.sentimentMap[r.id] ?? "neutral";
     return (
       (filterCity === "Toutes" || r.city          === filterCity) &&
       (filterShip === "Tous"   || r.shipment_type === filterShip) &&
@@ -299,11 +297,18 @@ export default function AnalyseClients() {
               <button className="ac-btn-primary" onClick={() => fileRef.current.click()}>
                 ⬆ Importer CSV
               </button>
-              <button className="ac-btn-secondary" onClick={() => {
-                setData(STATIC_DATA);
-                setAnalytics(computeAnalytics(STATIC_DATA));
-                setFileName("données_clients_demo.csv");
-              }}>
+              <button
+                type="button"
+                className="ac-btn-secondary"
+                disabled={loading}
+                onClick={() => {
+                  setData(STATIC_DATA);
+                  setFileName("données_clients_demo.csv");
+                  setAnalyzed(false);
+                  setAnalytics(emptyDashboardAnalytics());
+                  void runAnalysis(STATIC_DATA);
+                }}
+              >
                 🔄 Démo
               </button>
             </div>
@@ -312,6 +317,11 @@ export default function AnalyseClients() {
             Glissez un fichier CSV ici · Format attendu :{" "}
             <code>id, full_name, city, shipment_type, last_order_date, comment</code>
           </div>
+          {error && (
+            <div className="error-msg" style={{ marginTop: 12 }}>
+              {error}
+            </div>
+          )}
           <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }}
             onChange={e => handleFile(e.target.files[0])} />
         </div>
@@ -319,7 +329,7 @@ export default function AnalyseClients() {
         {/* ── KPI Cards ── */}
         <div className="ac-kpi-grid">
           {[
-            { icon: "📋", value: analytics.total,            label: "Analyses",  sub: "+84% ce mois",          color: "#0ea5e9", bg: "#e0f6ff" },
+            { icon: "📋", value: loading ? "…" : analytics.total, label: "Analyses", sub: analyzed ? "OpenAI · Zod" : "En attente", color: "#0ea5e9", bg: "#e0f6ff" },
             { icon: "😊", value: `${analytics.posRatio}%`,   label: "Positif",   sub: `${analytics.pos} avis`, color: "#22c55e", bg: "#dcfce7" },
             { icon: "😡", value: `${analytics.negRatio}%`,   label: "Négatif",   sub: `${analytics.neg} avis`, color: "#ef4444", bg: "#fee2e2" },
             { icon: "🌐", value: `${analytics.ihl}%`,        label: "IHL Score", sub: "Indice hybride",         color: "#8b5cf6", bg: "#f5f3ff" },
@@ -342,8 +352,15 @@ export default function AnalyseClients() {
           <div className="ac-card">
             <SectionTitle action={
               <div className="ac-analyse-actions">
-                <button className="ac-btn-analyse">Analyser</button>
-                <button className="ac-btn-lomat">Lomàt vetòhes ▶</button>
+                <button
+                  type="button"
+                  className="ac-btn-analyse"
+                  disabled={loading || !data.length}
+                  onClick={() => void runAnalysis(data)}
+                >
+                  {loading ? "Analyse…" : "Analyser"}
+                </button>
+                <button type="button" className="ac-btn-lomat">Lomàt vetòhes ▶</button>
               </div>
             }>
               ✍️ Analyse des clients
@@ -368,16 +385,16 @@ export default function AnalyseClients() {
               <div className="ac-donut-inner">
                 <Donut size={100} stroke={14} label={`${analytics.ihl}%`}
                   segments={[
-                    { pct: 41, color: "#3b82f6" },
-                    { pct: 59, color: "#f97316" },
+                    { pct: Math.max(0, analytics.frenchPct), color: "#3b82f6" },
+                    { pct: Math.max(0, analytics.algerianPct), color: "#f97316" },
                   ]} />
                 <div>
                   <div className="ac-donut-pills">
-                    <Pill bg="#e0f6ff" color="#0ea5e9">🇫🇷 Français 41%</Pill>
-                    <Pill bg="#fff4ee" color="#f97316">🇩🇿 Algérien 59%</Pill>
+                    <Pill bg="#e0f6ff" color="#0ea5e9">🇫🇷 Français {analytics.frenchPct}%</Pill>
+                    <Pill bg="#fff4ee" color="#f97316">🇩🇿 Algérien {analytics.algerianPct}%</Pill>
                   </div>
                   <div style={{ marginTop: 8 }}>
-                    <Pill bg="#fef3c7" color="#b45309" size="sm">⚡ intensité forte</Pill>
+                    <Pill bg="#fef3c7" color="#b45309" size="sm">⚡ {analytics.intensityLabel}</Pill>
                   </div>
                 </div>
               </div>
@@ -396,7 +413,11 @@ export default function AnalyseClients() {
                   <div className="ac-emotion-row"><span className="ac-dot" style={{ background: "#22c55e" }} /><b>{analytics.posRatio}%</b>&nbsp;positif</div>
                   <div className="ac-emotion-row"><span className="ac-dot" style={{ background: "#94a3b8" }} /><b>{analytics.neutralRatio}%</b>&nbsp;neutre</div>
                   <div className="ac-emotion-row"><span className="ac-dot" style={{ background: "#ef4444" }} /><b>{analytics.negRatio}%</b>&nbsp;négatif</div>
-                  <div className="ac-emotion-themes">19% thèmes</div>
+                  <div className="ac-emotion-themes">
+                    {analytics.themes?.length
+                      ? analytics.themes.slice(0, 4).join(" · ")
+                      : "Thèmes après analyse"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -409,6 +430,9 @@ export default function AnalyseClients() {
 
           <div className="ac-card">
             <SectionTitle>Sentiments par type d'envoi</SectionTitle>
+            {!Object.keys(analytics.shipMap).length && (
+              <p className="ac-import-filename">Importez des données pour voir les barres.</p>
+            )}
             {Object.entries(analytics.shipMap).map(([type, v]) => (
               <MiniBar key={type} label={type} pos={v.pos} neg={v.neg}
                 neutral={v.neutral} total={v.total} />
@@ -424,6 +448,9 @@ export default function AnalyseClients() {
 
           <div className="ac-card">
             <SectionTitle>Émotions par région</SectionTitle>
+            {!topCities.length && (
+              <p className="ac-import-filename">Pas encore de données par ville.</p>
+            )}
             {topCities.map(([city, v]) => {
               const posW = Math.round((v.pos / v.total) * 100);
               const negW = Math.round((v.neg / v.total) * 100);
@@ -457,7 +484,7 @@ export default function AnalyseClients() {
                   #delai_livraison{" "}
                   <Pill bg="#fff4ee" color="#f97316" size="sm">📋 {analytics.delayMentions}</Pill>
                 </div>
-                <div className="ac-alert-desc">Vague de critiques négatives concernant les délais de livraison</div>
+                <div className="ac-alert-desc">{analytics.insights?.delays}</div>
               </div>
             </div>
             <div className="ac-alert-card good">
@@ -467,7 +494,7 @@ export default function AnalyseClients() {
                   #service_rapide{" "}
                   <Pill bg="#dcfce7" color="#22c55e" size="sm">📋 {analytics.pos}</Pill>
                 </div>
-                <div className="ac-alert-desc">Majorité des clients satisfaits de la vitesse de livraison Express</div>
+                <div className="ac-alert-desc">{analytics.insights?.service || "Synthèse issue des sentiments agrégés."}</div>
               </div>
             </div>
             <div className="ac-alert-card info">
@@ -477,7 +504,7 @@ export default function AnalyseClients() {
                   #hybridité_ling.{" "}
                   <Pill bg="#f5f3ff" color="#8b5cf6" size="sm">IHL {analytics.ihl}%</Pill>
                 </div>
-                <div className="ac-alert-desc">Mélange Darija/Français détecté dans {analytics.ihl}% des avis</div>
+                <div className="ac-alert-desc">{analytics.insights?.hybrid}</div>
               </div>
             </div>
           </div>
@@ -532,7 +559,7 @@ export default function AnalyseClients() {
                         <td><Pill bg={sc.bg} color={sc.color} size="sm">{r.shipment_type}</Pill></td>
                         <td className="ac-td-date">{r.last_order_date}</td>
                         <td className="ac-td-comment" title={r.comment}>{r.comment}</td>
-                        <td><SentimentBadge sentiment={analytics.sentimentMap[r.id]} /></td>
+                        <td><SentimentBadge sentiment={analytics.sentimentMap[r.id] ?? "neutral"} /></td>
                       </tr>
                     );
                   })}

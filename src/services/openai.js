@@ -1,8 +1,10 @@
-// ─── Presentation metadata ─────────────────────────────────────────────────
+// ─── IHL single-text analysis (AnalyzeForm) — distinct from clientsAnalyze.js ─
+
+import { ihlAnalysisSchema } from "../../schemas/ihlAnalysis.js";
 
 const LANG_META = {
   Algérien: { color: "#10b981", flag: "🇩🇿" },
-  Français:  { color: "#f97316", flag: "🇫🇷" },
+  Français: { color: "#f97316", flag: "🇫🇷" },
 };
 
 function computeLangDistribution(tokens) {
@@ -34,20 +36,25 @@ function enrichAnalysis(parsed, inputText) {
   };
 }
 
-// ─── Main export ───────────────────────────────────────────────────────────
-
-export async function analyzeText(text) {
+/**
+ * Analyse IHL d’un seul texte (route /analyze, AnalyzeForm).
+ * Réponse validée avec Zod côté client après l’appel Netlify `analyze`.
+ */
+export async function analyzeIhlText(text) {
   const res = await fetch("/.netlify/functions/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
   });
 
+  const raw = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const { error } = await res.json().catch(() => ({}));
-    throw new Error(error ?? `Erreur serveur (${res.status})`);
+    throw new Error(raw.error ?? `Erreur serveur (${res.status})`);
   }
 
-  const parsed = await res.json();
+  const parsed = ihlAnalysisSchema.parse(raw);
   return enrichAnalysis(parsed, text);
 }
+
+/** @deprecated alias — préférez analyzeIhlText */
+export const analyzeText = analyzeIhlText;

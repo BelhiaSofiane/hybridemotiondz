@@ -2,7 +2,7 @@ import { useState } from "react";
 import AnalyzeForm from "../components/AnalyzeForm";
 import Loader from "../components/Loader";
 import Results from "../components/Results";
-import { analyzeText } from "../services/openai";
+import { analyzeIhlText } from "../services/openai";
 
 export default function AnalyzePage() {
   const [text, setText] = useState("");
@@ -52,7 +52,7 @@ export default function AnalyzePage() {
     setError(null);
 
     try {
-      const result = await analyzeText(text);
+      const result = await analyzeIhlText(text);
       setAnalysisData(result);
     } catch (err) {
       console.error("Erreur analyse:", err);

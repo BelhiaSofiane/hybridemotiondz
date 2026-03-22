@@ -5,6 +5,9 @@
 [functions]
   node_bundler = "esbuild"
 
+# Required when both command + targetPort are set — otherwise Netlify Dev can
+# mis-proxy Vite and break module scripts (empty/wrong MIME for /@vite/client, /src/*.jsx).
 [dev]
+  framework = "#custom"
   command = "npm run dev"
   targetPort = 5173

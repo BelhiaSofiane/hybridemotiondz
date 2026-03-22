@@ -1,26 +1,9 @@
 import OpenAI from "openai";
-import { z } from "zod";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { ihlAnalysisSchema } from "../../schemas/ihlAnalysis.js";
 
 // ✅ process.env — never exposed to the browser
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-const TokenSchema = z.object({
-  word: z.string(),
-  lang: z.enum(["ar", "fr"]),
-  highlight: z.boolean(),
-});
-
-const AnalysisSchema = z.object({
-  sentiment: z.object({
-    label: z.enum(["positif", "négatif", "neutre"]),
-    score: z.number().int().min(0).max(100),
-  }),
-  dominante: z.enum(["dominante arabe", "dominante française"]),
-  intensite: z.enum(["intensité faible", "intensité moyenne", "intensité forte"]),
-  emotionScore: z.number().int().min(0).max(100),
-  tokens: z.array(TokenSchema).min(1),
-});
 
 export const handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -28,7 +11,15 @@ export const handler = async (event) => {
   }
 
   try {
-    const { text } = JSON.parse(event.body);
+    const body = JSON.parse(event.body ?? "{}");
+    const { text } = body;
+    if (typeof text !== "string" || !text.trim()) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Champ text requis (non vide)" }),
+      };
+    }
 
     const rawTokens = text
       .toLowerCase()
@@ -67,7 +58,7 @@ NE CALCULE PAS les pourcentages ni l'IHL : ils seront calculés côté applicati
           content: JSON.stringify({ tokens: tokensForPrompt }),
         },
       ],
-      response_format: zodResponseFormat(AnalysisSchema, "analysis"),
+      response_format: zodResponseFormat(ihlAnalysisSchema, "analysis"),
     });
 
     const message = response.choices[0].message;
@@ -76,7 +67,7 @@ NE CALCULE PAS les pourcentages ni l'IHL : ils seront calculés côté applicati
       (() => {
         const raw = message.content ?? "";
         const clean = raw.replace(/```json|```/g, "").trim();
-        return AnalysisSchema.parse(JSON.parse(clean));
+        return ihlAnalysisSchema.parse(JSON.parse(clean));
       })();
 
     return {
