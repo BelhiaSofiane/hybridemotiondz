@@ -1,5 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+/* ==========================================================================
+   HybridEmotion DZ — Merged Stylesheet
+   Combines: App.css, index.css, AnalyseClients.css
+   ========================================================================== */
 
+/* ─── Google Fonts ───────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ─── Base Reset & Root ──────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -8,6 +15,37 @@
   padding: 0;
 }
 
+:root {
+  /* Typography & rendering (from index.css) */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* AnalyseClients variables — aligned with app palette */
+  --blue1: #0a1628;
+  --blue2: #0f2448;
+  --blue3: #1a3a6e;
+  --accent: #f97316;
+  --accent-soft: #fff4ee;
+  --teal: #0ea5e9;
+  --teal-soft: #e0f6ff;
+  --green: #22c55e;
+  --green-soft: #dcfce7;
+  --red: #ef4444;
+  --red-soft: #fee2e2;
+  --yellow: #eab308;
+  --yellow-soft: #fefce8;
+  --purple: #8b5cf6;
+  --purple-soft: #f5f3ff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --bg-page: #f1f5f9;
+}
+
+/* ─── Body & Layout ──────────────────────────────────────────────────────── */
 body {
   font-family: 'DM Sans', sans-serif;
   background: radial-gradient(ellipse at 60% 0%, #1a4fd6 0%, #0f2a7a 45%, #060e2e 100%);
@@ -26,8 +64,7 @@ body {
   margin: 0 auto;
 }
 
-/* ── Header ── */
-
+/* ─── Header ─────────────────────────────────────────────────────────────── */
 .header-container {
   position: relative;
   width: 100vw;
@@ -36,6 +73,7 @@ body {
   margin-left: -50vw;
   margin-right: -50vw;
 }
+
 .header {
   background: linear-gradient(135deg, #1e56e8 0%, #1240c9 100%);
   padding: 20px 20px 18px;
@@ -111,7 +149,16 @@ body {
   border: 1.5px solid #1240c9;
 }
 
-/* ── Content ── */
+/* ─── App Main (Outlet container) ─────────────────────────────────────────── */
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ─── Content ────────────────────────────────────────────────────────────── */
 .content {
   flex: 1;
   padding: 20px 16px;
@@ -131,57 +178,109 @@ body {
   width: 100%;
 }
 
-/* ── Form card ── */
-.form-card {
-  background: #ffffffee;
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 8px 32px #0003;
+/* ─── Home Landing Page ──────────────────────────────────────────────────── */
+.home-landing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
 }
 
-.textarea {
-  width: 100%;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'DM Sans', sans-serif;
+.home-card {
+  max-width: 400px;
+  text-align: center;
+  padding: 28px 24px;
+}
+
+.home-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+
+.home-title span {
+  color: #fb923c;
+}
+
+.home-desc {
   font-size: 14px;
   color: #334155;
-  background: transparent;
   line-height: 1.6;
-  min-height: 80px;
+  margin-bottom: 24px;
 }
 
-.textarea::placeholder {
-  color: #94a3b8;
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.analyze-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  color: #fff;
+.home-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
   border: none;
   border-radius: 50px;
-  padding: 14px;
+  padding: 14px 20px;
   font-family: 'Sora', sans-serif;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 18px #f9731650;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.analyze-btn:active {
+.home-btn:active {
   transform: scale(0.97);
 }
 
-.analyze-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.home-btn-primary {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #fff;
+  box-shadow: 0 4px 18px #f9731650;
 }
 
-/* ── Section card ── */
+.home-btn-primary:hover {
+  color: #fff;
+}
+
+.home-btn-secondary {
+  background: linear-gradient(135deg, #1e56e8 0%, #1240c9 100%);
+  color: #fff;
+  box-shadow: 0 4px 18px #1e56e844;
+}
+
+.home-btn-secondary:hover {
+  color: #fff;
+}
+
+.home-hint {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.6;
+  text-align: left;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.home-hint strong {
+  color: #1e3a8a;
+}
+
+/* ─── Error Message ──────────────────────────────────────────────────────── */
+.error-msg {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ─── Section Card ───────────────────────────────────────────────────────── */
 .section-title {
   font-family: 'Sora', sans-serif;
   font-size: 18px;
@@ -195,8 +294,7 @@ body {
   border-radius: 18px;
   padding: 16px;
   box-shadow: 0 6px 24px #0002;
-  margin:12px 0;
-
+  margin: 12px 0;
 }
 
 .card-title {
@@ -212,30 +310,31 @@ body {
   font-weight: 500;
 }
 
-/* ── About page ── */
-.about-card {
-  background: #0f172a;
+/* ─── About page ─────────────────────────────────────────────────────────── */
+.about-card-new {
+  /* Uses ac-card base; extends with about text styles */
 }
 
-.about-title {
-  color: #e5e7eb;
-}
-
-.about-text {
+.about-text-new {
   font-size: 14px;
-  color: #e5e7eb;
-  margin-bottom: 10px;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.6;
 }
 
-.about-list {
-  margin: 6px 0 12px;
-  padding-left: 18px;
+.about-list-new {
+  margin: 8px 0 16px;
+  padding-left: 20px;
   font-size: 14px;
-  color: #cbd5f5;
+  color: var(--text-muted);
   line-height: 1.7;
 }
 
-/* ── IHL ── */
+.about-list-new li {
+  margin-bottom: 6px;
+}
+
+/* ─── IHL ────────────────────────────────────────────────────────────────── */
 .ihl-inner {
   background: #f8fafc;
   border-radius: 14px;
@@ -280,7 +379,6 @@ body {
   text-align: center;
 }
 
-/* stars/flags row */
 .ihl-meta {
   display: flex;
   gap: 16px;
@@ -302,7 +400,7 @@ body {
   border-radius: 50%;
 }
 
-/* ── Répartition ── */
+/* ─── Répartition ────────────────────────────────────────────────────────── */
 .lang-row {
   display: flex;
   gap: 10px;
@@ -329,7 +427,7 @@ body {
   font-weight: 800;
 }
 
-/* ── Buttons ── */
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
 .action-row {
   display: flex;
   gap: 10px;
@@ -367,7 +465,7 @@ body {
   box-shadow: 0 4px 14px #0f766e44;
 }
 
-/* ── Heatmap ── */
+/* ─── Heatmap ────────────────────────────────────────────────────────────── */
 .heatmap-text {
   font-size: 14px;
   line-height: 1.9;
@@ -395,7 +493,7 @@ body {
   padding: 1px 4px;
 }
 
-/* ── Loader ── */
+/* ─── Loader ─────────────────────────────────────────────────────────────── */
 .loader {
   display: flex;
   flex-direction: column;
@@ -426,7 +524,7 @@ body {
   font-weight: 600;
 }
 
-/* ── Sliding drawer menu ── */
+/* ─── Sliding Drawer Menu ────────────────────────────────────────────────── */
 .drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -445,12 +543,12 @@ body {
 .drawer {
   position: fixed;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
   width: 260px;
   background: #0f172a;
-  box-shadow: 4px 0 18px #0008;
-  transform: translateX(-100%);
+  box-shadow: -4px 0 18px #0008;
+  transform: translateX(100%);
   transition: transform 0.2s ease-out;
   z-index: 40;
   display: flex;
@@ -492,6 +590,7 @@ body {
 }
 
 .drawer-item {
+  display: block;
   border: none;
   background: transparent;
   color: #cbd5f5;
@@ -502,6 +601,12 @@ body {
   padding: 10px 12px;
   border-radius: 999px;
   cursor: pointer;
+  text-decoration: none;
+  width: 100%;
+}
+
+.drawer-item:hover {
+  color: #e5e7eb;
 }
 
 .drawer-item-active {
@@ -509,7 +614,7 @@ body {
   color: #f9fafb;
 }
 
-/* ── Legend ── */
+/* ─── Legend ─────────────────────────────────────────────────────────────── */
 .legend {
   display: flex;
   gap: 12px;
@@ -532,16 +637,35 @@ body {
   border-radius: 3px;
 }
 
-/* ── Empty state (desktop right side before results) ── */
+/* ─── Empty State ────────────────────────────────────────────────────────── */
 .empty-state {
   background: #0f172a;
   color: #e5e7eb;
+}
+
+.empty-state-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.empty-state-card .empty-state-text,
+.empty-state-card .ac-section-title-text {
+  color: var(--text);
+}
+
+.empty-state-card .empty-state-accent {
+  color: var(--accent);
+}
+
+.empty-state-card .empty-state-list {
+  color: var(--text-muted);
 }
 
 .empty-state-text {
   font-size: 13px;
   color: #e5e7eb;
   margin-bottom: 8px;
+  line-height: 1.6;
 }
 
 .empty-state-accent {
@@ -554,9 +678,26 @@ body {
   font-size: 13px;
   color: #cbd5f5;
   line-height: 1.7;
+  padding-left: 0;
 }
 
-/* ── IHL extras ── */
+.empty-state-card .empty-state-list {
+  margin-top: 8px;
+}
+
+/* ─── Analyze Form (IHL) — aligned with AnalyseClients ───────────────────── */
+.ac-analyze-form-card {
+  margin-bottom: 0;
+}
+
+.ac-form-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* ─── IHL Extras ─────────────────────────────────────────────────────────── */
 .ihl-header-row {
   display: flex;
   flex-wrap: wrap;
@@ -586,7 +727,670 @@ body {
   margin-bottom: 6px;
 }
 
-/* ── Desktop layout ── */
+/* ─── AnalyseClients: Base ───────────────────────────────────────────────── */
+.ac-root {
+  background: transparent;
+  min-height: 0;
+  font-family: 'DM Sans', 'Sora', sans-serif;
+  color: var(--text);
+}
+
+/* ─── AnalyseClients: Page Body ──────────────────────────────────────────── */
+.ac-body {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ─── AnalyseClients: Card ───────────────────────────────────────────────── */
+.ac-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 6px 24px #0002;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+/* ─── AnalyseClients: Import Zone ────────────────────────────────────────── */
+.ac-import-card {
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ac-import-card.dragging {
+  border-style: dashed;
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.ac-import-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ac-import-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.ac-import-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.ac-import-filename {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ac-import-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ac-btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.ac-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.ac-btn-secondary {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+
+.ac-btn-secondary:hover {
+  opacity: 0.8;
+}
+
+.ac-btn-ghost {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+
+.ac-btn-ghost:hover {
+  opacity: 0.8;
+}
+
+.ac-import-hint {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+}
+
+.ac-import-hint code {
+  color: var(--teal);
+}
+
+/* ─── AnalyseClients: KPI Grid ───────────────────────────────────────────── */
+.ac-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ac-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ac-kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.ac-kpi-value {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ac-kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ac-kpi-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ─── AnalyseClients: Analysis Row ───────────────────────────────────────── */
+.ac-analysis-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: start;
+}
+
+/* ─── AnalyseClients: Section Title ──────────────────────────────────────── */
+.ac-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ac-section-title-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ac-section-link {
+  font-size: 12px;
+  color: var(--teal);
+  cursor: pointer;
+  font-weight: 600;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.ac-section-link:hover {
+  text-decoration: underline;
+}
+
+/* ─── AnalyseClients: Comment Preview ────────────────────────────────────── */
+.ac-comment-preview {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  min-height: 80px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.ac-comment-highlight {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ac-textarea {
+  width: 100%;
+  min-height: 70px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  background: #fff;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.ac-textarea:focus {
+  border-color: var(--teal);
+}
+
+/* ─── AnalyseClients: Analyse Actions ────────────────────────────────────── */
+.ac-analyse-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ac-btn-analyse {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.ac-btn-analyse:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.ac-btn-lomat {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ─── AnalyseClients: Donut Column ───────────────────────────────────────── */
+.ac-donut-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 200px;
+}
+
+.ac-donut-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ac-donut-inner > div:last-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.ac-donut-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ac-donut-pills .pill {
+  max-width: 100%;
+}
+
+.ac-emotion-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ac-emotion-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.ac-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ac-emotion-themes {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ─── AnalyseClients: Charts Grid ────────────────────────────────────────── */
+.ac-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* ─── AnalyseClients: Mini Bar ───────────────────────────────────────────── */
+.ac-minibar {
+  margin-bottom: 10px;
+}
+
+.ac-minibar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.ac-minibar-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ac-minibar-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ac-minibar-track {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 8px;
+  gap: 2px;
+}
+
+.ac-minibar-pos {
+  background: var(--green);
+  border-radius: 3px;
+}
+
+.ac-minibar-neu {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+
+.ac-minibar-neg {
+  background: var(--red);
+  border-radius: 3px;
+}
+
+.ac-bar-legend {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ac-bar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ac-bar-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ─── AnalyseClients: Region Bars ────────────────────────────────────────── */
+.ac-region-row {
+  margin-bottom: 10px;
+}
+
+.ac-region-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.ac-region-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ac-region-score {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ac-region-track {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 7px;
+  background: #f1f5f9;
+}
+
+.ac-region-pos {
+  background: linear-gradient(90deg, var(--teal), var(--green));
+  border-radius: 3px;
+}
+
+.ac-region-neg {
+  background: var(--red);
+  margin-left: 2px;
+  border-radius: 3px;
+}
+
+/* ─── AnalyseClients: Trends ─────────────────────────────────────────────── */
+.ac-trends-card {
+  margin-bottom: 24px;
+}
+
+.ac-trends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.ac-alert-card {
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.ac-alert-card.warn {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.ac-alert-card.good {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.ac-alert-card.info {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+}
+
+.ac-alert-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ac-alert-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ac-alert-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* ─── AnalyseClients: Table Section ──────────────────────────────────────── */
+.ac-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ac-search {
+  flex: 1;
+  min-width: 160px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.ac-search:focus {
+  border-color: var(--teal);
+}
+
+.ac-select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--text);
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.ac-select:focus {
+  border-color: var(--teal);
+}
+
+.ac-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+table.ac-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+table.ac-table thead tr {
+  background: #f8fafc;
+}
+
+table.ac-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+table.ac-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+table.ac-table tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+table.ac-table tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+table.ac-table tbody tr:hover {
+  background: var(--teal-soft);
+  transition: background 0.15s;
+}
+
+.ac-td-id {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.ac-td-name {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ac-td-date {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.ac-td-comment {
+  color: var(--text);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ac-empty {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-muted);
+}
+
+.ac-summary-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── AnalyseClients: Pill Component ─────────────────────────────────────── */
+.pill {
+  border-radius: 20px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pill-md {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.pill-sm {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+/* ─── Desktop Layout ─────────────────────────────────────────────────────── */
 @media (min-width: 992px) {
   body {
     align-items: flex-start;
@@ -620,9 +1424,152 @@ body {
     overflow-y: auto;
     padding-left: 8px;
   }
+
+  .home-landing {
+    padding: 40px 32px;
+  }
+
+  .home-card {
+    max-width: 480px;
+    padding: 36px 32px;
+  }
+
+  .home-title {
+    font-size: 26px;
+  }
+
+  .home-buttons {
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .home-btn {
+    min-width: 180px;
+  }
 }
 
-/* ── Print: only export results ── */
+/* ─── AnalyseClients: Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ac-body {
+    padding: 0;
+  }
+
+  .ac-analysis-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ac-donut-col {
+    flex-direction: column;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .ac-donut-col .ac-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Stack donut above legend/pills on mobile for better fit */
+  .ac-donut-inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ac-donut-inner > div:last-child {
+    width: 100%;
+  }
+
+  .ac-donut-pills {
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .ac-emotion-legend {
+    align-items: center;
+  }
+
+  .ac-emotion-row {
+    justify-content: center;
+  }
+
+  .ac-emotion-themes {
+    text-align: center;
+  }
+
+  /* Slightly scale down donut on mobile to fit better */
+  .ac-donut-inner > div:first-child {
+    flex-shrink: 0;
+  }
+
+  .ac-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ac-trends-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ac-import-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ac-filters {
+    flex-direction: column;
+  }
+
+  .ac-search {
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ac-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ac-kpi-value {
+    font-size: 18px;
+  }
+
+  .ac-kpi-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .ac-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-buttons {
+    flex-direction: column;
+  }
+
+  /* Extra-small: scale donut down for very narrow screens */
+  .ac-donut-inner > div:first-child {
+    transform: scale(0.9);
+    transform-origin: center;
+  }
+
+  .ac-emotion-row {
+    font-size: 11px;
+  }
+
+  .ac-donut-pills .pill {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+}
+
+/* ─── Print: Export Results Only ─────────────────────────────────────────── */
 @media print {
   body {
     background: #ffffff !important;
@@ -649,7 +1596,7 @@ body {
   }
 
   .header-container,
-  .form-card,
+  .content-left,
   .action-btn.btn-share {
     display: none !important;
   }
