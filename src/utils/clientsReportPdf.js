@@ -21,6 +21,34 @@ function truncateCell(s, max) {
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
+/** Generate actionable tips from analytics */
+function generateTips(analytics, topWords) {
+  const tips = [];
+  if (analytics.negRatio >= 25) {
+    tips.push("Le taux de commentaires negatifs est eleve - priorisez l'ecoute client et la resolution des plaintes.");
+  }
+  if (analytics.delayMentions > 0) {
+    tips.push("Les clients evoquent des retards de livraison - revoyez vos delais ou communiquez mieux sur les attentes.");
+  }
+  const priceWords = ["ghali", "ghalya", "prix", "cher", "expensive", "سعر", "ثمن"];
+  const hasPrice = topWords.some((w) => priceWords.some((pw) => w.word.toLowerCase().includes(pw)));
+  if (hasPrice) {
+    tips.push("Le prix est souvent mentionne - verifiez votre politique tarifaire ou la perception valeur.");
+  }
+  const serviceWords = ["service", "client", "support", "khadma"];
+  const hasService = topWords.some((w) => serviceWords.some((sw) => w.word.toLowerCase().includes(sw)));
+  if (hasService && analytics.negRatio >= 15) {
+    tips.push("Le service client est evoque - formez vos equipes et ameliorez les processus de reponse.");
+  }
+  if (analytics.posRatio >= 70) {
+    tips.push("Satisfaction elevee - maintenez la qualite et communiquez ces resultats en interne.");
+  }
+  if (tips.length === 0) {
+    tips.push("Analysation terminee - consultez les graphiques pour identifier les axes d'amelioration.");
+  }
+  return tips;
+}
+
 /** Horizontal stacked bar: positive (green) | neutral (gray) | negative (red) */
 function drawStackedBar(doc, x, y, w, h, posPct, neuPct, negPct) {
   const p = Math.max(0, posPct);
@@ -221,6 +249,74 @@ export function downloadClientsAnalysisPdf({ fileName, data, analytics }) {
       y += 4.5;
     }
     y += 3;
+  }
+
+  /* ── Conseils / Tips ── */
+  const tips = generateTips(analytics, analytics.topWords || []);
+  addPageIfNeeded(12 + tips.length * 12);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text("Conseils et recommandations", margin, y);
+  y += 8;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  for (const tip of tips) {
+    addPageIfNeeded(14);
+    doc.setTextColor(14, 165, 233);
+    doc.text("•", margin, y);
+    doc.setTextColor(60, 60, 60);
+    const paras = doc.splitTextToSize(tip, contentW - 6);
+    doc.text(paras, margin + 5, y);
+    y += paras.length * 4.5 + 3;
+  }
+  y += 4;
+
+  /* ── Top mots + Commentaires negatifs ── */
+  if (analytics.topWords?.length) {
+    addPageIfNeeded(18);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Mots les plus frequents", margin, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const wordStr = analytics.topWords.map((w) => `${w.word} (${w.count})`).join("  ·  ");
+    const wordParas = doc.splitTextToSize(wordStr, contentW);
+    for (const ln of wordParas) {
+      doc.text(ln, margin, y);
+      y += 4.5;
+    }
+    y += 4;
+  }
+
+  const negativeRows = data.filter((r) => (analytics.sentimentMap[r.id] ?? "neutral") === "negative").slice(0, 5);
+  if (negativeRows.length) {
+    addPageIfNeeded(14 + negativeRows.length * 14);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("5 commentaires negatifs (priorite)", margin, y);
+    y += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    for (const r of negativeRows) {
+      addPageIfNeeded(16);
+      doc.setTextColor(220, 38, 38);
+      doc.text(`#${r.id} · ${truncateCell(r.city, 15)}`, margin, y);
+      y += 4;
+      doc.setTextColor(60, 60, 60);
+      const paras = doc.splitTextToSize(truncateCell(r.comment, 200), contentW);
+      for (const ln of paras) {
+        doc.text(ln, margin, y);
+        y += 4;
+      }
+      y += 4;
+    }
+    y += 4;
   }
 
   doc.setFontSize(10);

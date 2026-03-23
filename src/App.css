@@ -453,6 +453,12 @@ body {
   transform: scale(0.97);
 }
 
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-pdf {
   background: #1e40af;
   color: #fff;
@@ -943,6 +949,12 @@ body {
 }
 
 /* ─── AnalyseClients: Comment Preview ────────────────────────────────────── */
+.ac-paste-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
 .ac-comment-preview {
   background: #f8fafc;
   border: 1px solid var(--border);
@@ -953,6 +965,21 @@ body {
   font-size: 13px;
   line-height: 1.6;
   color: var(--text);
+}
+
+.ac-comment-preview-dynamic {
+  min-height: auto;
+  padding: 8px 12px;
+}
+
+.ac-preview-badge {
+  display: inline-block;
+  background: var(--teal-soft);
+  color: var(--teal);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .ac-comment-highlight {
@@ -1188,6 +1215,70 @@ body {
   background: var(--red);
   margin-left: 2px;
   border-radius: 3px;
+}
+
+/* ─── Negative Comments List ──────────────────────────────────────────────── */
+.ac-negative-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ac-negative-item {
+  padding: 10px 12px;
+  background: #fef2f2;
+  border-left: 4px solid var(--red);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.ac-negative-item:last-child {
+  margin-bottom: 0;
+}
+
+.ac-negative-comment {
+  display: block;
+  color: var(--text);
+  line-height: 1.5;
+  max-height: 3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-negative-meta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ─── Top Words ───────────────────────────────────────────────────────────── */
+.ac-top-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.ac-top-word-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.ac-top-word-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ac-top-word-count {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 /* ─── AnalyseClients: Trends ─────────────────────────────────────────────── */

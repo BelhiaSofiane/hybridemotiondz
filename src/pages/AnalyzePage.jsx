@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import AnalyzeForm from "../components/AnalyzeForm";
 import Loader from "../components/Loader";
 import Results from "../components/Results";
@@ -9,6 +9,8 @@ export default function AnalyzePage() {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const pdfBusyRef = useRef(false);
 
   const handleShare = async () => {
     if (!analysisData) return;
@@ -40,10 +42,21 @@ export default function AnalyzePage() {
     }
   };
 
-  const handleGeneratePdf = () => {
-    if (!analysisData) return;
-    window.print();
-  };
+  const handleGeneratePdf = useCallback(async () => {
+    if (!analysisData || pdfBusyRef.current) return;
+    pdfBusyRef.current = true;
+    setPdfBusy(true);
+    try {
+      const { downloadIhlAnalysisPdf } = await import("../utils/ihlReportPdf.js");
+      downloadIhlAnalysisPdf({ analysisData, text });
+    } catch (e) {
+      console.error(e);
+      alert(e?.message ?? "Impossible de générer le PDF.");
+    } finally {
+      pdfBusyRef.current = false;
+      setPdfBusy(false);
+    }
+  }, [analysisData, text]);
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
@@ -63,7 +76,12 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="content content-layout">
+    <div className="content content-layout" style={{ position: "relative" }}>
+      {pdfBusy && (
+        <div className="ac-pdf-busy-overlay" role="status" aria-live="polite">
+          <span className="ac-pdf-busy-inner">Génération du PDF…</span>
+        </div>
+      )}
       <div className="content-left">
         <AnalyzeForm
           text={text}
@@ -85,6 +103,7 @@ export default function AnalyzePage() {
             data={analysisData}
             onShare={handleShare}
             onGeneratePdf={handleGeneratePdf}
+            pdfBusy={pdfBusy}
           />
         ) : (
           <div className="ac-card empty-state-card">

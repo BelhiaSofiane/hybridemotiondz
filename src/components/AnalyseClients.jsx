@@ -81,6 +81,24 @@ function parseCSVLine(line) {
   return out;
 }
 
+/** Parse pasted text into comment rows: one non-empty line = one comment */
+function parsePastedComments(text) {
+  const lines = text
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  if (lines.length === 0) return [];
+  return lines.map((line, idx) => ({
+    id: idx + 1,
+    full_name: `Avis ${idx + 1}`,
+    city: "—",
+    shipment_type: "—",
+    last_order_date: "",
+    comment: line,
+  }));
+}
+
 function parseCSV(text) {
   const lines = text
     .trim()
@@ -208,11 +226,7 @@ export default function AnalyseClients() {
   const [showTable, setShowTable] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const pdfBusyRef = useRef(false);
-  const [inputText, setInputText] = useState(
-    "Fal tafhem! Ce produit c'est une dinguerie, j'ador\n" +
-    "Mais houma 3anda probléme f livraison, hadak\n" +
-    "li ychouf, mazalna n9esin f délais, ça dégoûte 😒"
-  );
+  const [inputText, setInputText] = useState("");
   const fileRef = useRef();
 
   const runAnalysis = useCallback(async (rows) => {
@@ -253,7 +267,25 @@ export default function AnalyseClients() {
     reader.readAsText(file);
   }, [runAnalysis]);
 
-  const cities = ["Toutes", ...Array.from(new Set(data.map(r => r.city))).sort()];
+  const handleAnalyzePasted = useCallback(() => {
+    const pastedRows = parsePastedComments(inputText);
+    if (pastedRows.length > 0) {
+      setData(pastedRows);
+      setFileName("commentaires_collés.txt");
+      setAnalyzed(false);
+      setAnalytics(emptyDashboardAnalytics());
+      void runAnalysis(pastedRows);
+    } else if (data.length > 0) {
+      void runAnalysis(data);
+    } else {
+      setError("Collez des commentaires (un par ligne) ou importez un CSV.");
+    }
+  }, [inputText, data, runAnalysis]);
+
+  const canAnalyze = inputText.trim().length > 0 || data.length > 0;
+  const pastedCount = inputText.trim() ? parsePastedComments(inputText).length : 0;
+
+  const cities = ["Toutes", ...Array.from(new Set(data.map(r => r.city))).filter(Boolean).sort()];
   const ships  = ["Tous", "Express", "Standard", "Freight"];
   const sents  = ["Tous", "positive", "neutral", "negative", "mixed"];
 
@@ -387,30 +419,30 @@ export default function AnalyseClients() {
           {/* Text input card */}
           <div className="ac-card">
             <SectionTitle action={
-              <div className="ac-analyse-actions">
-                <button
-                  type="button"
-                  className="ac-btn-analyse"
-                  disabled={loading || !data.length}
-                  onClick={() => void runAnalysis(data)}
-                >
-                  {loading ? "Analyse…" : "Analyser"}
-                </button>
-                <button type="button" className="ac-btn-lomat">Lomàt vetòhes ▶</button>
-              </div>
+              <button
+                type="button"
+                className="ac-btn-analyse"
+                disabled={loading || !canAnalyze}
+                onClick={() => void handleAnalyzePasted()}
+              >
+                {loading ? "Analyse…" : "Analyser"}
+              </button>
             }>
               ✍️ Analyse des clients
             </SectionTitle>
-            <div className="ac-comment-preview">
-              Fal tafhem!{" "}
-              <Pill bg="#d1fae5" color="#059669" size="sm">Ce produit</Pill>{" "}
-              c'est une dinguerie, j'ador<br />
-              <span className="ac-comment-highlight">Mais houma 3anda probléme f livraison</span>, hadak<br />
-              li ychouf, mazalna n9esin f délais, ça dégoûte 😒
-            </div>
+            <p className="ac-paste-hint">
+              Collez des commentaires ci-dessous (un par ligne) ou importez un CSV en haut.
+            </p>
+            {pastedCount > 0 && (
+              <div className="ac-comment-preview ac-comment-preview-dynamic">
+                <span className="ac-preview-badge">
+                  {pastedCount} commentaire{pastedCount > 1 ? "s" : ""} prêt{pastedCount > 1 ? "s" : ""}
+                </span>
+              </div>
+            )}
             <textarea className="ac-textarea" value={inputText}
               onChange={e => setInputText(e.target.value)}
-              placeholder="Saisissez ou collez un avis client en Darija, Français, ou Arabic…" />
+              placeholder={'Ex:\nservice mli7\nghali bzf\nlivraison rapide w ndifa'} />
           </div>
 
           {/* Donut charts column */}
@@ -505,6 +537,44 @@ export default function AnalyseClients() {
             })}
           </div>
 
+        </div>
+
+        {/* ── Negative Comments (أسوأ 5) ── */}
+        {analytics.sentimentMap && (() => {
+          const negativeRows = data
+            .filter((r) => (analytics.sentimentMap[r.id] ?? "neutral") === "negative")
+            .slice(0, 5);
+          if (!negativeRows.length) return null;
+          return (
+            <div className="ac-card">
+              <SectionTitle>📝 التعليقات السلبية (أسوأ 5) / Commentaires négatifs</SectionTitle>
+              <ul className="ac-negative-list">
+                {negativeRows.map((r) => (
+                  <li key={r.id} className="ac-negative-item">
+                    <span className="ac-negative-comment" title={r.comment}>{r.comment}</span>
+                    <span className="ac-negative-meta">#{r.id} · {r.city}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
+
+        {/* ── Top Words ── */}
+        <div className="ac-card">
+          <SectionTitle>🔥 الكلمات الأكثر تكراراً / Mots les plus fréquents</SectionTitle>
+          {!analytics.topWords?.length ? (
+            <p className="ac-import-filename">Importez des données et lancez l’analyse pour voir les mots fréquents.</p>
+          ) : (
+            <div className="ac-top-words">
+              {analytics.topWords.map(({ word, count }, i) => (
+                <div key={i} className="ac-top-word-item">
+                  <span className="ac-top-word-label">{word}</span>
+                  <span className="ac-top-word-count">{count}×</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Trends & Alerts ── */}

@@ -1,3 +1,33 @@
+// Stopwords (FR / AR / Darija) — excluded from word frequency
+const STOPWORDS = new Set([
+  "le", "la", "les", "un", "une", "des", "de", "du", "et", "est", "en", "au", "aux", "à", "pour", "avec", "sur", "dans",
+  "ce", "ces", "cette", "son", "sa", "ses", "mon", "ma", "mes", "ton", "ta", "tes", "notre", "votre", "leur",
+  "il", "elle", "on", "nous", "vous", "ils", "elles", "je", "tu",
+  "que", "qui", "quoi", "dont", "où", "mais", "ou", "donc", "car", "ni", "si",
+  "kan", "f", "w", "3la", "b", "m3a", "d", "l", "fi", "daba",
+]);
+
+/** Extract top N words by frequency from comment text (handles Arabic, French, Darija). */
+function computeTopWords(data, limit = 12) {
+  const counts = new Map();
+  for (const row of data) {
+    const text = String(row.comment ?? "").normalize("NFC");
+    // Split on whitespace + punctuation, keep words >= 2 chars
+    const tokens = text.toLowerCase()
+      .replace(/[\u0600-\u06FF]+/g, (ar) => ar + " ") // separate Arabic words
+      .split(/[\s.,;:!?'"()\[\]{}–—\-/\\]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2 && !/^\d+$/.test(t) && !STOPWORDS.has(t));
+    for (const t of tokens) {
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([word, count]) => ({ word, count }));
+}
+
 /**
  * Build dashboard aggregates from CSV rows + validated OpenAI batch response.
  */
@@ -56,6 +86,7 @@ export function computeDashboardAnalytics(data, api) {
     sentimentMap,
     cityMap,
     shipMap,
+    topWords: computeTopWords(data),
     ihl: api.ihl,
     frenchPct: api.frenchPct,
     algerianPct: api.algerianPct,
@@ -80,6 +111,7 @@ export function emptyDashboardAnalytics() {
     sentimentMap: {},
     cityMap: {},
     shipMap: {},
+    topWords: [],
     ihl: 0,
     frenchPct: 50,
     algerianPct: 50,

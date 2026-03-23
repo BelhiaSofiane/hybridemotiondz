@@ -1,7 +1,7 @@
 import Donut from "../assets/Donut";
 import Pill from "../assets/Pill";
 
-export default function Results({ data, onShare, onGeneratePdf }) {
+export default function Results({ data, onShare, onGeneratePdf, pdfBusy = false }) {
 
     const d = data; // real AI data, same shape as DUMMY
 
@@ -131,8 +131,12 @@ export default function Results({ data, onShare, onGeneratePdf }) {
 
             {/* Buttons */}
             <div className="action-row">
-                <button className="action-btn btn-pdf" onClick={onGeneratePdf}>
-                    <span>📄</span> GÉNÉRER PDF
+                <button
+                    className="action-btn btn-pdf"
+                    onClick={onGeneratePdf}
+                    disabled={pdfBusy}
+                >
+                    <span>📄</span> {pdfBusy ? "PDF…" : "GÉNÉRER PDF"}
                 </button>
 
                 <button className="action-btn btn-share" onClick={onShare}>
